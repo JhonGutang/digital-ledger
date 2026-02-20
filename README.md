@@ -43,4 +43,14 @@ cd apps/frontend
 npm install
 npm run dev
 ```
-*The frontend web application will spin up at http://localhost:5173 and automatically connect to the backend.*
+## Documentation
+
+For detailed information on the system architecture and implementation:
+- [Purpose & Vision](docs/PURPOSE.md)
+- [MVP Roadmap & Status](docs/MVP.md)
+- [Data Model & Schema](docs/SCHEMA.md)
+- [Authentication & RBAC System](docs/AUTH_SYSTEM.md)
+- [UI Styling & Component Guide](docs/UI_GUIDE.md)
+
+---
+*Digital Ledger - Phase 2 Complete.*

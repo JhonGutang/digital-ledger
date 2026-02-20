@@ -4,17 +4,16 @@ This schema defines the foundational data model for the Digital Ledger applicati
 
 ## Entities
 
-### `users`
-Represents the users (accountants, auditors, admins) of the system. Essential for enforcing accountability and audit trails.
-- `id` (UUID, Primary Key)
+### `users` (Implementation of `ApplicationUser`)
+Represents the users (accountants, auditors, admins) of the system using ASP.NET Core Identity.
+- `id` (String, Primary Key)
 - `email` (String, Unique, Not Null)
 - `password_hash` (String, Not Null)
 - `first_name` (String, Not Null)
 - `last_name` (String, Not Null)
-- `role` (Enum: `ADMIN`, `ACCOUNTANT`, `AUDITOR`)
+- `role` (Managed via `AspNetUserRoles` and `AspNetRoles`)
 - `is_active` (Boolean, Default: `true`)
-- `created_at` (Timestamp, Default: `now()`)
-- `updated_at` (Timestamp, Default: `now()`)
+- `security_stamp`, `concurrency_stamp` (Identity Internals)
 
 ### `accounts` (Chart of Accounts)
 Represents the standardized categories used to classify and record financial data.

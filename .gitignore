@@ -5,6 +5,8 @@ apps/backend.tests/bin/
 apps/backend.tests/obj/
 *.sqlite
 *.db
+*.db-shm
+*.db-wal
 
 # Frontend (React/Vite)
 apps/frontend/node_modules/

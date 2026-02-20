@@ -11,8 +11,8 @@ This document outlines the core features required to build a functional MVP for 
 
 ### 1. Authentication & Role-Based Access Control (RBAC)
 *Secure entry and strict role enforcement for Admins, Accountants, and Auditors.*
-- [ ] **User Login/Registration** (Status: 🔴 Not Implemented)
-- [ ] **Role Enforcement Middleware** (Status: 🔴 Not Implemented)
+- [x] **User Login/Registration** (Status: 🟢 Implemented)
+- [x] **Role Enforcement Middleware** (Status: 🟢 Implemented)
 
 ### 2. Chart of Accounts (CoA) Management
 *Standardized categories used to classify and record financial data.*
