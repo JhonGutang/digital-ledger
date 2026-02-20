@@ -1,0 +1,24 @@
+# Backend (.NET/C#)
+apps/backend/bin/
+apps/backend/obj/
+apps/backend.tests/bin/
+apps/backend.tests/obj/
+*.sqlite
+*.db
+
+# Frontend (React/Vite)
+apps/frontend/node_modules/
+apps/frontend/dist/
+apps/frontend/dist-ssr/
+apps/frontend/*.local
+apps/frontend/.env
+apps/frontend/.env.*
+
+# Editor and OS files
+.vscode/
+.idea/
+*.suo
+*.sln
+*.user
+.DS_Store
+Thumbs.db

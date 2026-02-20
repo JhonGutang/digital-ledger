@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "path": "apps/frontend",
+      "name": "Frontend (React Vite)"
+    },
+    {
+      "path": "apps/backend",
+      "name": "Backend (ASP.NET Core API)"
+    },
+    {
+      "path": "apps/backend.tests",
+      "name": "Backend Tests (xUnit)"
+    },
+    {
+      "path": ".",
+      "name": "Digital Ledger Workspace"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "apps/frontend": true,
+      "apps/backend": true,
+      "apps/backend.tests": true
+    }
+  }
+}
