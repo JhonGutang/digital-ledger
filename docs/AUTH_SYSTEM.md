@@ -43,3 +43,23 @@ The application automatically seeds the following roles and a default admin user
 1. **Admin Only Registration**: Only users with the `Admin` role can register new users via the `POST /api/auth/register` endpoint.
 2. **Password Standards**: Identity is configured to require uppercase, lowercase, numbers, and special characters.
 3. **Stateless Compliance**: The API does not use cookies for authentication; all requests must include the `Authorization: Bearer <token>` header.
+
+---
+
+## 4. RBAC Permission Matrix
+
+This matrix defines which roles can perform which actions. Use this to apply `[Authorize(Roles = "...")]` attributes correctly.
+
+| Action                              | Admin | Accountant | Auditor |
+|-------------------------------------|-------|------------|---------|
+| Register new users                  | ✅    | ❌         | ❌      |
+| Manage user accounts (activate/deactivate) | ✅ | ❌      | ❌      |
+| Manage Chart of Accounts (CRUD)     | ✅    | ❌         | ❌      |
+| Create/Edit Draft transactions      | ✅    | ✅         | ❌      |
+| Submit transactions for approval    | ✅    | ✅         | ❌      |
+| Approve/Post transactions           | ❌    | ❌         | ✅      |
+| Void/Reverse posted transactions    | ❌    | ❌         | ✅      |
+| View General Ledger                 | ✅    | ✅         | ✅      |
+| View Trial Balance                  | ✅    | ✅         | ✅      |
+| Upload CSV for ingestion            | ✅    | ✅         | ❌      |
+| View audit trail                    | ✅    | ❌         | ✅      |
