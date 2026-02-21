@@ -11,6 +11,8 @@ namespace DigitalLedger.Api.Data
         {
         }
 
+        public DbSet<Account> Accounts { get; set; }
+
         // DbSets will be added here as models are created
     }
 }
