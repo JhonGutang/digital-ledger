@@ -1,0 +1,31 @@
+ M apps/backend.tests/DigitalLedger.Tests.csproj
+ M apps/backend/Data/ApplicationDbContext.cs
+ M apps/backend/Exceptions/DomainExceptions.cs
+ M apps/backend/Middleware/GlobalExceptionHandler.cs
+ M apps/backend/Migrations/ApplicationDbContextModelSnapshot.cs
+ M apps/backend/Program.cs
+ M apps/frontend/package-lock.json
+ M apps/frontend/package.json
+ M apps/frontend/src/App.tsx
+ M apps/frontend/src/components/layout/Sidebar.tsx
+ M apps/frontend/src/index.css
+ M docs/ERROR_HANDLING_GUIDELINES.md
+?? apps/backend.tests/Services/TransactionServiceIntegrationTests.cs
+?? apps/backend.tests/Services/TransactionServiceTests.cs
+?? apps/backend/Controllers/TransactionsController.cs
+?? apps/backend/Migrations/20260221215932_AddTransactions.Designer.cs
+?? apps/backend/Migrations/20260221215932_AddTransactions.cs
+?? apps/backend/Models/DTOs/Transaction/
+?? apps/backend/Models/Enums/EntryType.cs
+?? apps/backend/Models/Enums/TransactionStatus.cs
+?? apps/backend/Models/Transaction.cs
+?? apps/backend/Models/TransactionEntry.cs
+?? apps/backend/Repositories/Interfaces/ITransactionRepository.cs
+?? apps/backend/Repositories/TransactionRepository.cs
+?? apps/backend/Services/Interfaces/ITransactionService.cs
+?? apps/backend/Services/TransactionService.cs
+?? apps/frontend/src/hooks/transactions/
+?? apps/frontend/src/pages/transactions/
+?? apps/frontend/src/services/transactions/
+?? apps/frontend/src/types/transaction.ts
+?? my_git_status.txt

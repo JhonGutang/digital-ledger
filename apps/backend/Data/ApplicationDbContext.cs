@@ -12,7 +12,16 @@ namespace DigitalLedger.Api.Data
         }
 
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<TransactionEntry> TransactionEntries { get; set; }
 
-        // DbSets will be added here as models are created
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<TransactionEntry>()
+                .Property(e => e.Amount)
+                .HasPrecision(19, 4);
+        }
     }
 }

@@ -9,6 +9,8 @@ const queryClient = new QueryClient();
 
 import Layout from './components/layout/Layout';
 import AccountsPage from './pages/accounts/AccountsPage';
+import TransactionsPage from './pages/transactions/TransactionsPage';
+import TransactionFormPage from './pages/transactions/TransactionFormPage';
 
 function App() {
   return (
@@ -28,6 +30,9 @@ function App() {
                   </div>
                 } />
                 <Route path="/accounts" element={<AccountsPage />} />
+                <Route path="/transactions" element={<TransactionsPage />} />
+                <Route path="/transactions/new" element={<TransactionFormPage />} />
+                <Route path="/transactions/:id/edit" element={<TransactionFormPage />} />
               </Route>
             </Route>
             

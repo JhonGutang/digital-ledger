@@ -1,15 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ListTree, Settings, Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import {
+  LayoutDashboard,
+  WalletCards,
+  BarChart3,
+  Settings,
+  BookOpen,
+  Menu
+} from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
 
 export function Sidebar() {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Chart of Accounts', path: '/accounts', icon: ListTree },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { label: 'Overview', icon: LayoutDashboard, path: '/' },
+    { label: 'Chart of Accounts', icon: WalletCards, path: '/accounts' },
+    { label: 'Journal Entries', icon: BookOpen, path: '/transactions' },
+    { label: 'Reporting', icon: BarChart3, path: '/reports' },
+    { label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   return (
@@ -36,7 +45,7 @@ export function Sidebar() {
                 )}
               >
                 <item.icon className="mr-3 h-4 w-4" />
-                {item.name}
+                {item.label}
               </Button>
             </Link>
           );

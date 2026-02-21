@@ -11,6 +11,11 @@ public class ValidationException : Exception
     public ValidationException(string message) : base(message) { }
 }
 
+public class BusinessRuleException : Exception
+{
+    public BusinessRuleException(string message) : base(message) { }
+}
+
 public class UnauthorizedException : Exception
 {
     public UnauthorizedException(string message = "You are not authenticated.")

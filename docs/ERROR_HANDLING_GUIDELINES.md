@@ -141,6 +141,7 @@ Example response:
 | Exception Type            | HTTP Status |
 |---------------------------|------------|
 | ValidationException       | 400        |
+| BusinessRuleException     | 422        |
 | UnauthorizedException     | 401        |
 | ForbiddenException        | 403        |
 | NotFoundException         | 404        |
@@ -207,6 +208,11 @@ public class NotFoundException : Exception
 public class ValidationException : Exception
 {
     public ValidationException(string message) : base(message) { }
+}
+
+public class BusinessRuleException : Exception
+{
+    public BusinessRuleException(string message) : base(message) { }
 }
 
 public class ConflictException : Exception
