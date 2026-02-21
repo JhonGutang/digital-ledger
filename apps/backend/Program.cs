@@ -7,12 +7,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DigitalLedger.Api.Services.Interfaces;
 using DigitalLedger.Api.Services;
+using DigitalLedger.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -99,6 +102,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.UseHttpsRedirection();
 
