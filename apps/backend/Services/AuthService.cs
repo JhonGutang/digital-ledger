@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using DigitalLedger.Api.Exceptions;
 using DigitalLedger.Api.Models;
 using DigitalLedger.Api.Models.DTOs.Auth;
 using DigitalLedger.Api.Services.Interfaces;
@@ -20,17 +21,17 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
+    public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
     {
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
-        
-        if (user == null || !user.IsActive)
-            return null;
 
-        var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-        
-        if (!result)
-            return null;
+        if (user == null || !user.IsActive)
+            throw new UnauthorizedException("Invalid email or password.");
+
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+
+        if (!isPasswordValid)
+            throw new UnauthorizedException("Invalid email or password.");
 
         var roles = await _userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? string.Empty;
@@ -46,11 +47,11 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<AuthResponseDto?> RegisterUserAsync(RegisterDto registerDto)
+    public async Task<AuthResponseDto> RegisterUserAsync(RegisterDto registerDto)
     {
-        var userExists = await _userManager.FindByEmailAsync(registerDto.Email);
-        if (userExists != null)
-            return null; // Or throw an exception for better error handling/messages
+        var existingUser = await _userManager.FindByEmailAsync(registerDto.Email);
+        if (existingUser != null)
+            throw new ConflictException($"A user with email '{registerDto.Email}' already exists.");
 
         var user = new ApplicationUser
         {
@@ -64,7 +65,10 @@ public class AuthService : IAuthService
         var result = await _userManager.CreateAsync(user, registerDto.Password);
 
         if (!result.Succeeded)
-            return null;
+        {
+            var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+            throw new Exceptions.ValidationException($"User registration failed: {errors}");
+        }
 
         await _userManager.AddToRoleAsync(user, registerDto.Role);
 
@@ -95,7 +99,7 @@ public class AuthService : IAuthService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(2), // Move expiration to config in real app
+            Expires = DateTime.UtcNow.AddHours(2),
             Issuer = jwtSettings["Issuer"],
             Audience = jwtSettings["Audience"],
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

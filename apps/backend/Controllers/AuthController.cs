@@ -21,14 +21,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var response = await _authService.LoginAsync(loginDto);
-
-        if (response == null)
-            return Unauthorized(new { message = "Invalid email or password." });
-
         return Ok(response);
     }
 
@@ -36,14 +29,7 @@ public class AuthController : ControllerBase
     [Authorize(Roles = Roles.ADMIN)]
     public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var response = await _authService.RegisterUserAsync(registerDto);
-
-        if (response == null)
-            return BadRequest(new { message = "User registration failed." });
-
         return Ok(response);
     }
 }
