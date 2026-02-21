@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 const queryClient = new QueryClient();
 
 import Layout from './components/layout/Layout';
+import AccountsPage from './pages/accounts/AccountsPage';
 
 function App() {
   return (
@@ -19,7 +20,15 @@ function App() {
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Layout />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={
+                  <div className="flex-1 flex flex-col items-center justify-center h-full p-8 w-full max-w-7xl mx-auto">
+                    {/* The existing card moves here since Layout shouldn't own dashboard content forever, but for MVP it's fine */}
+                    <div className="text-center text-zinc-500 p-12">Dashboard Overview (Coming Soon)</div>
+                  </div>
+                } />
+                <Route path="/accounts" element={<AccountsPage />} />
+              </Route>
             </Route>
             
             <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>

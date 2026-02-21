@@ -7,13 +7,21 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DigitalLedger.Api.Services.Interfaces;
 using DigitalLedger.Api.Services;
+using DigitalLedger.Api.Repositories.Interfaces;
+using DigitalLedger.Api.Repositories;
 using DigitalLedger.Api.Middleware;
+
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -62,6 +70,8 @@ builder.Services.AddAuthentication(options =>
 
 // Configure Custom Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAccountRepository, DigitalLedger.Api.Repositories.AccountRepository>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddCors(options =>
 {
