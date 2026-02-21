@@ -2,7 +2,7 @@
 
 This document provides a complete, end-to-end example of implementing a feature following the project's layered architecture. Use this as the pattern to replicate for all new features.
 
-> This example implements a simplified Account (Chart of Accounts) CRUD to demonstrate the required code structure, naming conventions, and file placement.
+> This example implements the Account (Chart of Accounts) CRUD to demonstrate the required code structure, naming conventions, and file placement. **This reflects the actual implemented code.**
 
 ---
 
@@ -10,6 +10,7 @@ This document provides a complete, end-to-end example of implementing a feature 
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
+using DigitalLedger.Api.Models.Enums;
 
 namespace DigitalLedger.Api.Models;
 
@@ -17,17 +18,17 @@ public class Account
 {
     public Guid Id { get; set; }
 
-    [Required, MaxLength(10)]
+    [Required, MaxLength(20)]
     public required string Code { get; set; }
 
     [Required, MaxLength(100)]
     public required string Name { get; set; }
 
     [Required]
-    public required string Category { get; set; }
+    public AccountCategory Category { get; set; }
 
     [Required]
-    public required string NormalBalance { get; set; }
+    public NormalBalance NormalBalance { get; set; }
 
     public string? Description { get; set; }
 
@@ -39,19 +40,66 @@ public class Account
 }
 ```
 
+> **Note:** `Category` and `NormalBalance` use C# enum types, not strings. The enums are defined in `Models/Enums/`.
+
 ---
 
-## 2. DTOs — `Models/DTOs/Account/AccountDtos.cs`
+## 2. Enums — `Models/Enums/`
 
 ```csharp
+// Models/Enums/AccountCategory.cs
+namespace DigitalLedger.Api.Models.Enums;
+
+public enum AccountCategory
+{
+    ASSET,
+    LIABILITY,
+    EQUITY,
+    REVENUE,
+    EXPENSE
+}
+```
+
+```csharp
+// Models/Enums/NormalBalance.cs
+namespace DigitalLedger.Api.Models.Enums;
+
+public enum NormalBalance
+{
+    DEBIT,
+    CREDIT
+}
+```
+
+---
+
+## 3. DTOs — `Models/DTOs/Account/AccountDtos.cs`
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+using DigitalLedger.Api.Models.Enums;
+
 namespace DigitalLedger.Api.Models.DTOs.Account;
 
 public class CreateAccountDto
 {
+    [Required]
     public required string Code { get; set; }
+
+    [Required]
     public required string Name { get; set; }
-    public required string Category { get; set; }
-    public required string NormalBalance { get; set; }
+
+    [Required]
+    public AccountCategory Category { get; set; }
+
+    public string? Description { get; set; }
+}
+
+public class UpdateAccountDto
+{
+    [Required]
+    public required string Name { get; set; }
+
     public string? Description { get; set; }
 }
 
@@ -64,12 +112,15 @@ public class AccountResponseDto
     public required string NormalBalance { get; set; }
     public string? Description { get; set; }
     public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 ```
 
+> **Note:** `CreateAccountDto` accepts `Category` as an enum. `NormalBalance` is NOT in the create DTO — it is auto-derived by the service. The `AccountResponseDto` serializes enums as strings.
+
 ---
 
-## 3. Repository Interface — `Repositories/Interfaces/IAccountRepository.cs`
+## 4. Repository Interface — `Repositories/Interfaces/IAccountRepository.cs`
 
 ```csharp
 using DigitalLedger.Api.Models;
@@ -80,13 +131,15 @@ public interface IAccountRepository
 {
     Task<List<Account>> GetAllAsync();
     Task<Account?> GetByIdAsync(Guid id);
+    Task<Account?> GetByCodeAsync(string code);
     Task<Account> CreateAsync(Account account);
+    Task<Account> UpdateAsync(Account account);
 }
 ```
 
 ---
 
-## 4. Repository — `Repositories/AccountRepository.cs`
+## 5. Repository — `Repositories/AccountRepository.cs`
 
 ```csharp
 using DigitalLedger.Api.Data;
@@ -114,10 +167,22 @@ public class AccountRepository : IAccountRepository
     {
         return await _context.Accounts.FindAsync(id);
     }
+    
+    public async Task<Account?> GetByCodeAsync(string code)
+    {
+        return await _context.Accounts.FirstOrDefaultAsync(a => a.Code == code);
+    }
 
     public async Task<Account> CreateAsync(Account account)
     {
         _context.Accounts.Add(account);
+        await _context.SaveChangesAsync();
+        return account;
+    }
+
+    public async Task<Account> UpdateAsync(Account account)
+    {
+        _context.Accounts.Update(account);
         await _context.SaveChangesAsync();
         return account;
     }
@@ -126,7 +191,7 @@ public class AccountRepository : IAccountRepository
 
 ---
 
-## 5. Service Interface — `Services/Interfaces/IAccountService.cs`
+## 6. Service Interface — `Services/Interfaces/IAccountService.cs`
 
 ```csharp
 using DigitalLedger.Api.Models.DTOs.Account;
@@ -138,16 +203,19 @@ public interface IAccountService
     Task<List<AccountResponseDto>> GetAllAsync();
     Task<AccountResponseDto> GetByIdAsync(Guid id);
     Task<AccountResponseDto> CreateAsync(CreateAccountDto createAccountDto);
+    Task<AccountResponseDto> UpdateAsync(Guid id, UpdateAccountDto updateAccountDto);
 }
 ```
 
 ---
 
-## 6. Service — `Services/AccountService.cs`
+## 7. Service — `Services/AccountService.cs`
 
 ```csharp
+using DigitalLedger.Api.Exceptions;
 using DigitalLedger.Api.Models;
 using DigitalLedger.Api.Models.DTOs.Account;
+using DigitalLedger.Api.Models.Enums;
 using DigitalLedger.Api.Repositories.Interfaces;
 using DigitalLedger.Api.Services.Interfaces;
 
@@ -165,67 +233,91 @@ public class AccountService : IAccountService
     public async Task<List<AccountResponseDto>> GetAllAsync()
     {
         var accounts = await _accountRepository.GetAllAsync();
-
-        return accounts.Select(a => new AccountResponseDto
-        {
-            Id = a.Id,
-            Code = a.Code,
-            Name = a.Name,
-            Category = a.Category,
-            NormalBalance = a.NormalBalance,
-            Description = a.Description,
-            IsActive = a.IsActive
-        }).ToList();
+        return accounts.Select(MapToResponse).ToList();
     }
 
     public async Task<AccountResponseDto> GetByIdAsync(Guid id)
     {
-        var account = await _accountRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException("Account", id);
+        var account = await _accountRepository.GetByIdAsync(id) ?? throw new NotFoundException("Account", id);
+        return MapToResponse(account);
+    }
 
+    public async Task<AccountResponseDto> CreateAsync(CreateAccountDto dto)
+    {
+        // Check for duplicate code
+        var existingAccount = await _accountRepository.GetByCodeAsync(dto.Code);
+        if (existingAccount != null)
+        {
+            throw new ConflictException($"An account with code '{dto.Code}' already exists.");
+        }
+
+        var account = new Account
+        {
+            Id = Guid.NewGuid(),
+            Code = dto.Code,
+            Name = dto.Name,
+            Category = dto.Category,
+            NormalBalance = DeriveNormalBalance(dto.Category),
+            Description = dto.Description,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var createdAccount = await _accountRepository.CreateAsync(account);
+        return MapToResponse(createdAccount);
+    }
+
+    public async Task<AccountResponseDto> UpdateAsync(Guid id, UpdateAccountDto dto)
+    {
+        var account = await _accountRepository.GetByIdAsync(id) ?? throw new NotFoundException("Account", id);
+        
+        account.Name = dto.Name;
+        account.Description = dto.Description;
+        account.UpdatedAt = DateTime.UtcNow;
+
+        var updatedAccount = await _accountRepository.UpdateAsync(account);
+        return MapToResponse(updatedAccount);
+    }
+
+    private static AccountResponseDto MapToResponse(Account account)
+    {
         return new AccountResponseDto
         {
             Id = account.Id,
             Code = account.Code,
             Name = account.Name,
-            Category = account.Category,
-            NormalBalance = account.NormalBalance,
+            Category = account.Category.ToString(),
+            NormalBalance = account.NormalBalance.ToString(),
             Description = account.Description,
-            IsActive = account.IsActive
+            IsActive = account.IsActive,
+            CreatedAt = account.CreatedAt
         };
     }
 
-    public async Task<AccountResponseDto> CreateAsync(CreateAccountDto createAccountDto)
+    private static NormalBalance DeriveNormalBalance(AccountCategory category)
     {
-        var account = new Account
+        return category switch
         {
-            Id = Guid.NewGuid(),
-            Code = createAccountDto.Code,
-            Name = createAccountDto.Name,
-            Category = createAccountDto.Category,
-            NormalBalance = createAccountDto.NormalBalance,
-            Description = createAccountDto.Description
-        };
-
-        var createdAccount = await _accountRepository.CreateAsync(account);
-
-        return new AccountResponseDto
-        {
-            Id = createdAccount.Id,
-            Code = createdAccount.Code,
-            Name = createdAccount.Name,
-            Category = createdAccount.Category,
-            NormalBalance = createdAccount.NormalBalance,
-            Description = createdAccount.Description,
-            IsActive = createdAccount.IsActive
+            AccountCategory.ASSET => NormalBalance.DEBIT,
+            AccountCategory.EXPENSE => NormalBalance.DEBIT,
+            AccountCategory.LIABILITY => NormalBalance.CREDIT,
+            AccountCategory.EQUITY => NormalBalance.CREDIT,
+            AccountCategory.REVENUE => NormalBalance.CREDIT,
+            _ => throw new ValidationException("Invalid account category")
         };
     }
 }
 ```
 
+> **Key Patterns:**
+> - `DeriveNormalBalance` automatically sets the NormalBalance based on the AccountCategory, removing the burden from the API consumer.
+> - `GetByCodeAsync` prevents duplicate account codes via a `ConflictException`.
+> - `MapToResponse` centralizes entity-to-DTO mapping as a private helper.
+
 ---
 
-## 7. Controller — `Controllers/AccountController.cs`
+## 8. Controller — `Controllers/AccountsController.cs`
 
 ```csharp
 using DigitalLedger.Api.Constants;
@@ -239,11 +331,11 @@ namespace DigitalLedger.Api.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class AccountController : ControllerBase
+public class AccountsController : ControllerBase
 {
     private readonly IAccountService _accountService;
 
-    public AccountController(IAccountService accountService)
+    public AccountsController(IAccountService accountService)
     {
         _accountService = accountService;
     }
@@ -263,18 +355,28 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = Roles.ADMIN)]
+    [Authorize(Roles = Roles.ADMIN + "," + Roles.ACCOUNTANT)]
     public async Task<IActionResult> Create([FromBody] CreateAccountDto createAccountDto)
     {
         var account = await _accountService.CreateAsync(createAccountDto);
         return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = Roles.ADMIN + "," + Roles.ACCOUNTANT)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAccountDto updateAccountDto)
+    {
+        var account = await _accountService.UpdateAsync(id, updateAccountDto);
+        return Ok(account);
+    }
 }
 ```
 
+> **Note:** The controller name is **`AccountsController`** (plural), which maps to the route `api/accounts`.
+
 ---
 
-## 8. DI Registration — `Program.cs`
+## 9. DI Registration — `Program.cs`
 
 ```csharp
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -283,11 +385,13 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 ---
 
-## 9. xUnit Test — `AccountServiceTests.cs`
+## 10. xUnit Test — `AccountServiceTests.cs`
 
 ```csharp
+using DigitalLedger.Api.Exceptions;
 using DigitalLedger.Api.Models;
 using DigitalLedger.Api.Models.DTOs.Account;
+using DigitalLedger.Api.Models.Enums;
 using DigitalLedger.Api.Repositories.Interfaces;
 using DigitalLedger.Api.Services;
 using Moq;
@@ -314,8 +418,8 @@ public class AccountServiceTests
             Id = accountId,
             Code = "1000",
             Name = "Cash",
-            Category = "ASSET",
-            NormalBalance = "DEBIT",
+            Category = AccountCategory.ASSET,
+            NormalBalance = NormalBalance.DEBIT,
             IsActive = true
         };
 
@@ -349,8 +453,10 @@ public class AccountServiceTests
 ## Key Takeaways
 
 - **Controller is thin**: no business logic, no try/catch, just calls the service.
-- **Service owns the logic**: mapping, validation, exception throwing.
+- **Service owns the logic**: mapping, validation, exception throwing, and domain derivation (e.g., `DeriveNormalBalance`).
 - **Repository is pure data access**: no business rules, just EF Core queries.
 - **DTOs are grouped by feature**: `Models/DTOs/Account/AccountDtos.cs`.
+- **Enums are in `Models/Enums/`**: used by both models and DTOs.
 - **Interfaces live in nested `Interfaces/` folders**.
 - **Tests mock the repository** and test the service layer directly.
+- **Controller names are plural** (e.g., `AccountsController` → `api/accounts`).

@@ -20,8 +20,8 @@ Represents the standardized categories used to classify and record financial dat
 - `id` (UUID, Primary Key)
 - `code` (String, Unique, Not Null) - *e.g., "1000" for Cash, allows for structured sorting and indexing.*
 - `name` (String, Not Null) - *e.g., "Cash", "Accounts Receivable".*
-- `category` (Enum: `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`) - *Crucial for generating financial statements like Balance Sheets and Income Statements.*
-- `normal_balance` (Enum: `DEBIT`, `CREDIT`) - *Defines how the account increases.*
+- `category` (Enum: `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`) — *Implemented as `AccountCategory` C# enum. Crucial for generating financial statements like Balance Sheets and Income Statements.*
+- `normal_balance` (Enum: `DEBIT`, `CREDIT`) — *Implemented as `NormalBalance` C# enum. Auto-derived from `category` by the service layer.*
 - `description` (Text, Nullable)
 - `is_active` (Boolean, Default: `true`) - *Soft delete capability to preserve history and prevent data loss.*
 - `created_at` (Timestamp, Default: `now()`)

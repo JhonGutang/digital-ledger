@@ -54,7 +54,7 @@ This matrix defines which roles can perform which actions. Use this to apply `[A
 |-------------------------------------|-------|------------|---------|
 | Register new users                  | ✅    | ❌         | ❌      |
 | Manage user accounts (activate/deactivate) | ✅ | ❌      | ❌      |
-| Manage Chart of Accounts (CRUD)     | ✅    | ❌         | ❌      |
+| Manage Chart of Accounts (CRUD)     | ✅    | ✅         | ❌      |
 | Create/Edit Draft transactions      | ✅    | ✅         | ❌      |
 | Submit transactions for approval    | ✅    | ✅         | ❌      |
 | Approve/Post transactions           | ❌    | ❌         | ✅      |

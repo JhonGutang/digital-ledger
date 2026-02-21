@@ -16,8 +16,8 @@ This document outlines the core features required to build a functional MVP for 
 
 ### 2. Chart of Accounts (CoA) Management
 *Standardized categories used to classify and record financial data.*
-- [ ] **Account CRUD Operations** (Status: 🔴 Not Implemented)
-- [ ] **Account Categorization Enforcement** (e.g., Asset, Liability, Normal Balance) (Status: 🔴 Not Implemented)
+- [x] **Account CRUD Operations** (Status: � Implemented)
+- [x] **Account Categorization Enforcement** (e.g., Asset, Liability, Normal Balance) (Status: � Implemented)
 
 ### 3. Manual Journal Entry System
 *The core engine for recording financial events.*

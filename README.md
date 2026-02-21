@@ -50,7 +50,11 @@ For detailed information on the system architecture and implementation:
 - [MVP Roadmap & Status](docs/MVP.md)
 - [Data Model & Schema](docs/SCHEMA.md)
 - [Authentication & RBAC System](docs/AUTH_SYSTEM.md)
+- [Backend Directory Conventions](docs/BACKEND_STRUCTURE.md)
+- [Reference Implementation](docs/REFERENCE_IMPLEMENTATION.md)
+- [Error Handling Guidelines](docs/ERROR_HANDLING_GUIDELINES.md)
+- [Domain Glossary](docs/GLOSSARY.md)
 - [UI Styling & Component Guide](docs/UI_GUIDE.md)
 
 ---
-*Digital Ledger - Phase 2 Complete.*
+*Digital Ledger — Phase 3: Account CRUD Implemented.*

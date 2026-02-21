@@ -13,8 +13,9 @@ apps/backend/
 ├── Middleware/          # Exception handlers, custom middleware
 ├── Migrations/         # EF Core auto-generated migrations (do not edit manually)
 ├── Models/             # Entity/EF Core models
-│   └── DTOs/           # Data Transfer Objects, grouped by feature
-│       └── {Feature}/  # e.g., Auth/, Account/, Transaction/
+│   ├── DTOs/           # Data Transfer Objects, grouped by feature
+│   │   └── {Feature}/  # e.g., Auth/, Account/, Transaction/
+│   └── Enums/          # Enum definitions (e.g., AccountCategory, NormalBalance)
 ├── Repositories/       # Data access layer
 │   └── Interfaces/     # Repository interfaces (e.g., IAccountRepository.cs)
 ├── Services/           # Business logic layer

@@ -16,12 +16,26 @@ The Digital Ledger frontend utilizes a modern, premium design system built on **
 ```
 apps/frontend/src/
 ├── components/
-│   ├── ui/          # Generic shadcn components (Card, Button, etc.)
-│   └── feature/     # Feature-specific components (auth/Login.tsx)
+│   ├── ui/              # Generic shadcn components (Card, Button, Table, etc.)
+│   ├── auth/            # Auth-specific components (ProtectedRoute, LogoutConfirmModal)
+│   └── layout/          # Layout components (Layout, Sidebar)
+├── context/
+│   └── AuthContext.tsx   # Global auth state provider
+├── hooks/
+│   ├── auth/            # Auth hooks (useAuth)
+│   └── accounts/        # Account hooks (useAccounts)
+├── pages/
+│   ├── auth/            # Auth pages (Login, Register)
+│   └── accounts/        # Account pages (AccountsPage)
+├── services/
+│   ├── api.ts           # Axios instance configuration
+│   ├── auth/            # Auth API services
+│   └── accounts/        # Account API services
+├── types/               # TypeScript type definitions
 ├── lib/
-│   └── utils.ts     # shadcn styling utilities (cn helper)
+│   └── utils.ts         # shadcn styling utilities (cn helper)
 └── styles/
-    └── index.css    # Global Tailwind and font configurations
+    └── index.css        # Global Tailwind and font configurations
 ```
 
 ## 4. Path Aliases
