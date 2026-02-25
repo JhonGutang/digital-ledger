@@ -57,4 +57,4 @@ For detailed information on the system architecture and implementation:
 - [UI Styling & Component Guide](docs/UI_GUIDE.md)
 
 ---
-*Digital Ledger — Phase 3: Account CRUD Implemented.*
+*Digital Ledger — Phase 3: Manual Journal Entry System Implemented.*

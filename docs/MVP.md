@@ -21,14 +21,14 @@ This document outlines the core features required to build a functional MVP for 
 
 ### 3. Manual Journal Entry System
 *The core engine for recording financial events.*
-- [ ] **Transaction Creation UI/API** (Status: 🔴 Not Implemented)
-- [ ] **Strict Double-Entry Validation** (Total Debits = Total Credits) (Status: 🔴 Not Implemented)
-- [ ] **Drafting System** (Save as `DRAFT` or submit as `PENDING_APPROVAL`) (Status: 🔴 Not Implemented)
+- [x] **Transaction Creation UI/API** (Status: 🟢 Implemented)
+- [x] **Strict Double-Entry Validation** (Total Debits = Total Credits) (Status: 🟢 Implemented)
+- [x] **Drafting System** (Save as `DRAFT` or submit as `PENDING_APPROVAL`) (Status: 🟢 Implemented)
 
 ### 4. The Maker-Checker Workflow & Immutability
 *Enforcing oversight and a pristine audit trail.*
 - [ ] **Approval Dashboard** (Auditors review and mark `POSTED`) (Status: 🔴 Not Implemented)
-- [ ] **Immutability Lock** (Prevent editing/deleting of `POSTED` transactions) (Status: 🔴 Not Implemented)
+- [x] **Immutability Lock** (Prevent editing/deleting of `POSTED` transactions) (Status: 🟢 Implemented)
 - [ ] **Reversing Entries System** (Create inverse transactions for corrections) (Status: 🔴 Not Implemented)
 
 ### 5. Automated CSV Ingestion (Standalone Feature)
