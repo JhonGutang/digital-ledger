@@ -73,12 +73,18 @@ export default function TransactionsPage() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                transactions?.map(tx => (
+                                [...(transactions || [])]
+                                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                    .map(tx => (
                                     <TableRow key={tx.id} className="border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                                         <TableCell className="whitespace-nowrap">
                                             <div className="flex items-center text-zinc-300">
                                                 <CalendarDays className="mr-2 h-4 w-4 text-zinc-500" />
-                                                {new Date(tx.date).toLocaleDateString()}
+                                                {new Intl.DateTimeFormat('en-PH', { 
+                                                    month: 'short', 
+                                                    day: 'numeric', 
+                                                    year: 'numeric' 
+                                                }).format(new Date(tx.date))}
                                             </div>
                                         </TableCell>
                                         <TableCell>
