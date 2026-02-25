@@ -166,20 +166,33 @@ public class TransactionServiceTests
     public async Task UpdateAsync_DraftTransaction_UpdatesSuccessfully()
     {
         var txId = Guid.NewGuid();
-        var existingTx = new Transaction { Id = txId, Description = "Old", Status = TransactionStatus.DRAFT, Date = DateTime.UtcNow };
+        var entryId1 = Guid.NewGuid();
+        var entryId2 = Guid.NewGuid();
+        var existingTx = new Transaction
+        {
+            Id = txId,
+            Description = "Old",
+            Status = TransactionStatus.DRAFT,
+            Date = DateTime.UtcNow,
+            Entries = new List<TransactionEntry>
+            {
+                new() { Id = entryId1, TransactionId = txId, AccountId = _validAccountId1, Amount = 100, EntryType = EntryType.DEBIT },
+                new() { Id = entryId2, TransactionId = txId, AccountId = _validAccountId2, Amount = 100, EntryType = EntryType.CREDIT }
+            }
+        };
 
         _mockTransactionRepository.Setup(r => r.GetByIdAsync(txId)).ReturnsAsync(existingTx);
-        _mockTransactionRepository.Setup(r => r.UpdateAsync(It.IsAny<Transaction>())).ReturnsAsync(existingTx);
+        _mockTransactionRepository.Setup(r => r.UpdateAsync(It.IsAny<Transaction>(), It.IsAny<List<TransactionEntry>>())).ReturnsAsync(existingTx);
 
         var updateDto = new UpdateTransactionDto
         {
             Description = "New",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
+            Entries = new List<UpdateTransactionEntryDto>
             {
-                new() { AccountId = _validAccountId1, Amount = 200, EntryType = EntryType.DEBIT },
-                new() { AccountId = _validAccountId2, Amount = 200, EntryType = EntryType.CREDIT }
+                new() { Id = entryId1, AccountId = _validAccountId1, Amount = 200, EntryType = EntryType.DEBIT },
+                new() { Id = entryId2, AccountId = _validAccountId2, Amount = 200, EntryType = EntryType.CREDIT }
             }
         };
 
@@ -192,7 +205,14 @@ public class TransactionServiceTests
     public async Task UpdateAsync_NonDraftTransaction_ThrowsBusinessRuleException()
     {
         var txId = Guid.NewGuid();
-        var existingTx = new Transaction { Id = txId, Description = "Pending", Status = TransactionStatus.PENDING_APPROVAL, Date = DateTime.UtcNow };
+        var existingTx = new Transaction
+        {
+            Id = txId,
+            Description = "Pending",
+            Status = TransactionStatus.PENDING_APPROVAL,
+            Date = DateTime.UtcNow,
+            Entries = new List<TransactionEntry>()
+        };
 
         _mockTransactionRepository.Setup(r => r.GetByIdAsync(txId)).ReturnsAsync(existingTx);
 
@@ -201,7 +221,7 @@ public class TransactionServiceTests
             Description = "New",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
+            Entries = new List<UpdateTransactionEntryDto>
             {
                 new() { AccountId = _validAccountId1, Amount = 200, EntryType = EntryType.DEBIT },
                 new() { AccountId = _validAccountId2, Amount = 200, EntryType = EntryType.CREDIT }
@@ -216,7 +236,7 @@ public class TransactionServiceTests
     public async Task DeleteAsync_DraftTransaction_DeletesSuccessfully()
     {
         var txId = Guid.NewGuid();
-        var existingTx = new Transaction { Id = txId, Status = TransactionStatus.DRAFT };
+        var existingTx = new Transaction { Id = txId, Status = TransactionStatus.DRAFT, Description = "Draft transaction" };
 
         _mockTransactionRepository.Setup(r => r.GetByIdAsync(txId)).ReturnsAsync(existingTx);
 
@@ -229,7 +249,7 @@ public class TransactionServiceTests
     public async Task DeleteAsync_NonDraftTransaction_ThrowsBusinessRuleException()
     {
         var txId = Guid.NewGuid();
-        var existingTx = new Transaction { Id = txId, Status = TransactionStatus.PENDING_APPROVAL };
+        var existingTx = new Transaction { Id = txId, Status = TransactionStatus.PENDING_APPROVAL, Description = "Pending transaction" };
 
         _mockTransactionRepository.Setup(r => r.GetByIdAsync(txId)).ReturnsAsync(existingTx);
 

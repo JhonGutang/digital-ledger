@@ -43,7 +43,8 @@ export function useUpdateTransaction() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTransactionDto }) => 
       transactionService.update(id, data),
-    onSuccess: async () => {
+    onSuccess: async (updatedTransaction, variables) => {
+      queryClient.setQueryData(['transactions', variables.id], updatedTransaction);
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success("Transaction updated successfully.");
     },

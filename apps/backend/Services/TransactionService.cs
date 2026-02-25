@@ -84,21 +84,42 @@ public class TransactionService : ITransactionService
         transaction.Status = dto.Status;
         transaction.UpdatedAt = DateTime.UtcNow;
 
-        // Remove old entries from DB first to avoid EF Core tracking conflicts
-        await _transactionRepository.RemoveEntriesAsync(transaction.Id);
+        var existingEntriesById = transaction.Entries.ToDictionary(e => e.Id);
+        var incomingIds = new HashSet<Guid>(dto.Entries.Where(e => e.Id.HasValue).Select(e => e.Id!.Value));
 
-        // Add new entries
-        transaction.Entries = dto.Entries.Select(entryDto => new TransactionEntry
+        var entriesToRemove = existingEntriesById.Keys
+            .Except(incomingIds)
+            .Select(removedId => existingEntriesById[removedId])
+            .ToList();
+
+        foreach (var entry in entriesToRemove)
         {
-            Id = Guid.NewGuid(),
-            TransactionId = transaction.Id,
-            AccountId = entryDto.AccountId,
-            Amount = entryDto.Amount,
-            EntryType = entryDto.EntryType,
-            Description = entryDto.Description
-        }).ToList();
+            transaction.Entries.Remove(entry);
+        }
 
-        var updatedTransaction = await _transactionRepository.UpdateAsync(transaction);
+        foreach (var entryDto in dto.Entries)
+        {
+            if (entryDto.Id.HasValue && existingEntriesById.TryGetValue(entryDto.Id.Value, out var existingEntry))
+            {
+                existingEntry.AccountId = entryDto.AccountId;
+                existingEntry.Amount = entryDto.Amount;
+                existingEntry.EntryType = entryDto.EntryType;
+                existingEntry.Description = entryDto.Description;
+            }
+            else
+            {
+                transaction.Entries.Add(new TransactionEntry
+                {
+                    TransactionId = transaction.Id,
+                    AccountId = entryDto.AccountId,
+                    Amount = entryDto.Amount,
+                    EntryType = entryDto.EntryType,
+                    Description = entryDto.Description
+                });
+            }
+        }
+
+        var updatedTransaction = await _transactionRepository.UpdateAsync(transaction, entriesToRemove);
         
         var reloadedTransaction = await _transactionRepository.GetByIdAsync(updatedTransaction.Id);
         return MapToResponse(reloadedTransaction!);
@@ -118,7 +139,7 @@ public class TransactionService : ITransactionService
         await _transactionRepository.DeleteAsync(transaction);
     }
 
-    private void ValidateTransactionState(TransactionStatus status, List<CreateTransactionEntryDto> entries)
+    private void ValidateTransactionState(TransactionStatus status, IEnumerable<ITransactionEntryDto> entries)
     {
         if (status == TransactionStatus.POSTED || status == TransactionStatus.VOIDED)
         {
@@ -126,15 +147,16 @@ public class TransactionService : ITransactionService
                 "Transactions cannot be created or updated directly to POSTED or VOIDED status.");
         }
 
-        if (entries == null || entries.Count < 2)
+        var entryList = entries?.ToList() ?? new List<ITransactionEntryDto>();
+        if (entryList.Count < 2)
         {
             throw new BusinessRuleException("A transaction must have at least two entries.");
         }
 
         if (status != TransactionStatus.DRAFT)
         {
-            var totalDebits = entries.Where(e => e.EntryType == EntryType.DEBIT).Sum(e => e.Amount);
-            var totalCredits = entries.Where(e => e.EntryType == EntryType.CREDIT).Sum(e => e.Amount);
+            var totalDebits = entryList.Where(e => e.EntryType == EntryType.DEBIT).Sum(e => e.Amount);
+            var totalCredits = entryList.Where(e => e.EntryType == EntryType.CREDIT).Sum(e => e.Amount);
 
             if (totalDebits != totalCredits)
             {
@@ -144,7 +166,7 @@ public class TransactionService : ITransactionService
         }
     }
 
-    private async Task ValidateAccountsAsync(List<CreateTransactionEntryDto> entries)
+    private async Task ValidateAccountsAsync(IEnumerable<ITransactionEntryDto> entries)
     {
         var accountIds = entries.Select(e => e.AccountId).Distinct().ToList();
         

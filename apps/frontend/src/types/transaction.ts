@@ -33,6 +33,14 @@ export interface CreateTransactionEntryDto {
   description?: string;
 }
 
+export interface UpdateTransactionEntryDto {
+  id?: string;
+  accountId: string;
+  amount: number;
+  entryType: EntryType;
+  description?: string;
+}
+
 export interface CreateTransactionDto {
   referenceNumber?: string;
   description: string;
@@ -46,5 +54,5 @@ export interface UpdateTransactionDto {
   description: string;
   date: string;
   status: TransactionStatus;
-  entries: CreateTransactionEntryDto[];
+  entries: UpdateTransactionEntryDto[];
 }

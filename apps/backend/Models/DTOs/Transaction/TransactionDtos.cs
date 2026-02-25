@@ -3,8 +3,33 @@ using DigitalLedger.Api.Models.Enums;
 
 namespace DigitalLedger.Api.Models.DTOs.Transaction;
 
-public class CreateTransactionEntryDto
+public interface ITransactionEntryDto
 {
+    Guid AccountId { get; set; }
+    decimal Amount { get; set; }
+    EntryType EntryType { get; set; }
+    string? Description { get; set; }
+}
+
+public class CreateTransactionEntryDto : ITransactionEntryDto
+{
+    [Required]
+    public Guid AccountId { get; set; }
+
+    [Required]
+    [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
+    public decimal Amount { get; set; }
+
+    [Required]
+    public EntryType EntryType { get; set; }
+
+    public string? Description { get; set; }
+}
+
+public class UpdateTransactionEntryDto : ITransactionEntryDto
+{
+    public Guid? Id { get; set; }
+
     [Required]
     public Guid AccountId { get; set; }
 
@@ -51,7 +76,7 @@ public class UpdateTransactionDto
 
     [Required]
     [MinLength(2, ErrorMessage = "A transaction must have at least two entries.")]
-    public required List<CreateTransactionEntryDto> Entries { get; set; }
+    public required List<UpdateTransactionEntryDto> Entries { get; set; }
 }
 
 public class TransactionEntryResponseDto

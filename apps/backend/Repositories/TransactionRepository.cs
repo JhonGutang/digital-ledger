@@ -43,9 +43,13 @@ public class TransactionRepository : ITransactionRepository
         return transaction;
     }
 
-    public async Task<Transaction> UpdateAsync(Transaction transaction)
+    public async Task<Transaction> UpdateAsync(Transaction transaction, List<TransactionEntry> entriesToRemove)
     {
-        _context.Transactions.Update(transaction);
+        if (entriesToRemove.Count > 0)
+        {
+            _context.TransactionEntries.RemoveRange(entriesToRemove);
+        }
+
         await _context.SaveChangesAsync();
         return transaction;
     }
@@ -53,15 +57,6 @@ public class TransactionRepository : ITransactionRepository
     public async Task DeleteAsync(Transaction transaction)
     {
         _context.Transactions.Remove(transaction);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task RemoveEntriesAsync(Guid transactionId)
-    {
-        var entries = await _context.TransactionEntries
-            .Where(e => e.TransactionId == transactionId)
-            .ToListAsync();
-        _context.TransactionEntries.RemoveRange(entries);
         await _context.SaveChangesAsync();
     }
 }

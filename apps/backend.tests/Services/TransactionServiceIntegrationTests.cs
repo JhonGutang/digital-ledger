@@ -67,7 +67,6 @@ public class TransactionServiceIntegrationTests : IDisposable
     [Fact]
     public async Task UpdateAsync_DraftTransaction_UpdatesDescriptionSuccessfully()
     {
-        // Arrange — Create a draft transaction first
         var createDto = new CreateTransactionDto
         {
             Description = "Original description",
@@ -82,34 +81,31 @@ public class TransactionServiceIntegrationTests : IDisposable
 
         var created = await _transactionService.CreateAsync(createDto, _userId);
 
-        // Act — Update the description
         var updateDto = new UpdateTransactionDto
         {
             Description = "Updated description",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
+            Entries = new List<UpdateTransactionEntryDto>
             {
-                new() { AccountId = _accountId1, Amount = 100, EntryType = EntryType.DEBIT },
-                new() { AccountId = _accountId2, Amount = 100, EntryType = EntryType.CREDIT }
+                new() { Id = created.Entries[0].Id, AccountId = _accountId1, Amount = 100, EntryType = EntryType.DEBIT },
+                new() { Id = created.Entries[1].Id, AccountId = _accountId2, Amount = 100, EntryType = EntryType.CREDIT }
             }
         };
 
         var result = await _transactionService.UpdateAsync(created.Id, updateDto, _userId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal("Updated description", result.Description);
         Assert.Equal(2, result.Entries.Count);
     }
 
     [Fact]
-    public async Task UpdateAsync_DraftTransaction_ReplacesEntriesSuccessfully()
+    public async Task UpdateAsync_DraftTransaction_UpdatesEntryAmountsSuccessfully()
     {
-        // Arrange — Create a draft with 2 entries
         var createDto = new CreateTransactionDto
         {
-            Description = "Entry replacement test",
+            Description = "Amount update test",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
             Entries = new List<CreateTransactionEntryDto>
@@ -121,28 +117,25 @@ public class TransactionServiceIntegrationTests : IDisposable
 
         var created = await _transactionService.CreateAsync(createDto, _userId);
 
-        // Act — Update with different amounts
         var updateDto = new UpdateTransactionDto
         {
-            Description = "Entry replacement test",
+            Description = "Amount update test",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
+            Entries = new List<UpdateTransactionEntryDto>
             {
-                new() { AccountId = _accountId1, Amount = 500, EntryType = EntryType.DEBIT },
-                new() { AccountId = _accountId2, Amount = 500, EntryType = EntryType.CREDIT }
+                new() { Id = created.Entries[0].Id, AccountId = _accountId1, Amount = 500, EntryType = EntryType.DEBIT },
+                new() { Id = created.Entries[1].Id, AccountId = _accountId2, Amount = 500, EntryType = EntryType.CREDIT }
             }
         };
 
         var result = await _transactionService.UpdateAsync(created.Id, updateDto, _userId);
 
-        // Assert — Verify entries were replaced, not duplicated
         Assert.NotNull(result);
         Assert.Equal(2, result.Entries.Count);
         Assert.Equal(500, result.Entries.First(e => e.EntryType == "DEBIT").Amount);
         Assert.Equal(500, result.Entries.First(e => e.EntryType == "CREDIT").Amount);
 
-        // Verify no orphaned entries in DB
         var dbEntries = await _context.TransactionEntries
             .Where(e => e.TransactionId == created.Id)
             .ToListAsync();
@@ -150,12 +143,11 @@ public class TransactionServiceIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateAsync_DraftTransaction_ConsecutiveUpdatesSucceed()
+    public async Task UpdateAsync_DraftTransaction_AddsNewEntrySuccessfully()
     {
-        // Arrange — Create a draft
         var createDto = new CreateTransactionDto
         {
-            Description = "Consecutive update test",
+            Description = "Add entry test",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
             Entries = new List<CreateTransactionEntryDto>
@@ -167,45 +159,28 @@ public class TransactionServiceIntegrationTests : IDisposable
 
         var created = await _transactionService.CreateAsync(createDto, _userId);
 
-        // Act — Update twice in a row (simulates autosave)
-        var updateDto1 = new UpdateTransactionDto
+        var updateDto = new UpdateTransactionDto
         {
-            Description = "First update",
+            Description = "Add entry test",
             Date = DateTime.UtcNow,
             Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
+            Entries = new List<UpdateTransactionEntryDto>
             {
-                new() { AccountId = _accountId1, Amount = 200, EntryType = EntryType.DEBIT },
-                new() { AccountId = _accountId2, Amount = 200, EntryType = EntryType.CREDIT }
+                new() { Id = created.Entries[0].Id, AccountId = _accountId1, Amount = 100, EntryType = EntryType.DEBIT },
+                new() { Id = created.Entries[1].Id, AccountId = _accountId2, Amount = 50, EntryType = EntryType.CREDIT },
+                new() { AccountId = _accountId2, Amount = 50, EntryType = EntryType.CREDIT }
             }
         };
 
-        var result1 = await _transactionService.UpdateAsync(created.Id, updateDto1, _userId);
-        Assert.Equal("First update", result1.Description);
+        var result = await _transactionService.UpdateAsync(created.Id, updateDto, _userId);
 
-        var updateDto2 = new UpdateTransactionDto
-        {
-            Description = "Second update",
-            Date = DateTime.UtcNow,
-            Status = TransactionStatus.DRAFT,
-            Entries = new List<CreateTransactionEntryDto>
-            {
-                new() { AccountId = _accountId1, Amount = 300, EntryType = EntryType.DEBIT },
-                new() { AccountId = _accountId2, Amount = 300, EntryType = EntryType.CREDIT }
-            }
-        };
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Entries.Count);
 
-        var result2 = await _transactionService.UpdateAsync(created.Id, updateDto2, _userId);
-
-        // Assert
-        Assert.Equal("Second update", result2.Description);
-        Assert.Equal(300, result2.Entries.First(e => e.EntryType == "DEBIT").Amount);
-
-        // Verify only 2 entries in DB (no orphans from multiple updates)
         var dbEntries = await _context.TransactionEntries
             .Where(e => e.TransactionId == created.Id)
             .ToListAsync();
-        Assert.Equal(2, dbEntries.Count);
+        Assert.Equal(3, dbEntries.Count);
     }
 
     public void Dispose()

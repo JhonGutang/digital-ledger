@@ -2,17 +2,16 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTransaction, useCreateTransaction, useUpdateTransaction } from '../../hooks/transactions/useTransactions';
 import { useAccounts } from '../../hooks/accounts/useAccounts';
-import type { CreateTransactionDto, EntryType } from '../../types/transaction';
+import type { EntryType } from '../../types/transaction';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, ArrowRight, Save, Loader2, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
-import { transactionService } from '../../services/transactions/transactionService';
 
 export default function TransactionFormPage() {
     const navigate = useNavigate();
@@ -29,7 +28,7 @@ export default function TransactionFormPage() {
 
     const [step, setStep] = useState<1 | 2>(1);
     const [lastAutosaved, setLastAutosaved] = useState<string | null>(null);
-    const [isFormReady, setIsFormReady] = useState(false);
+    const [isFormInitialized, setIsFormInitialized] = useState(false);
 
     // Form State
     const [referenceNumber, setReferenceNumber] = useState('');
@@ -45,29 +44,28 @@ export default function TransactionFormPage() {
 
     // Populate form with existing data for edit mode
     useEffect(() => {
-        if (isEditMode && existingTx) {
+        if (isEditMode && existingTx && !isFormInitialized) {
             setReferenceNumber(existingTx.referenceNumber || '');
             setDescription(existingTx.description);
             setDate(existingTx.date.split('T')[0]);
             setStatus(existingTx.status as 'DRAFT' | 'PENDING_APPROVAL');
             if (existingTx.entries.length > 0) {
-                setEntries(existingTx.entries.map((e, idx) => ({
-                    id: idx.toString(),
+                setEntries(existingTx.entries.map((e) => ({
+                    id: e.id,
                     accountId: e.accountId,
                     amount: e.amount.toString(),
                     entryType: e.entryType,
                     description: e.description || ''
                 })));
             }
-            setIsFormReady(true);
+            setIsFormInitialized(true);
         }
-    }, [isEditMode, existingTx]);
+    }, [isEditMode, existingTx, isFormInitialized]);
 
     // Restore autosaved draft from localStorage (new entries only)
     useEffect(() => {
-        if (isEditMode) {
-            return;
-        }
+        if (isEditMode) return;
+
         const saved = localStorage.getItem(AUTOSAVE_KEY);
         if (saved) {
             try {
@@ -88,7 +86,7 @@ export default function TransactionFormPage() {
                 localStorage.removeItem(AUTOSAVE_KEY);
             }
         }
-        setIsFormReady(true);
+        setIsFormInitialized(true);
     }, [isEditMode]);
 
     // Debounced autosave to localStorage (new entries only)
@@ -101,49 +99,16 @@ export default function TransactionFormPage() {
         []
     );
 
-    // Debounced autosave to database (editing drafts only)
-    const debouncedDbAutosave = useCallback(
-        debounce(async (transactionId: string, formData: { referenceNumber: string; description: string; date: string; status: string; entries: typeof entries }) => {
-            const hasValidEntries = formData.entries.length >= 2 && formData.entries.every(e => e.accountId);
-            if (!hasValidEntries) return;
-
-            try {
-                await transactionService.update(transactionId, {
-                    referenceNumber: formData.referenceNumber || undefined,
-                    description: formData.description,
-                    date: new Date(formData.date).toISOString(),
-                    status: formData.status as 'DRAFT' | 'PENDING_APPROVAL',
-                    entries: formData.entries.map(e => ({
-                        accountId: e.accountId,
-                        amount: parseFloat(e.amount) || 0,
-                        entryType: e.entryType,
-                        description: e.description || undefined
-                    }))
-                });
-                setLastAutosaved(new Date().toLocaleTimeString());
-            } catch (error: any) {
-                console.warn('Autosave failed:', error?.response?.data || error?.message);
-            }
-        }, AUTOSAVE_DEBOUNCE_MS),
-        []
-    );
-
-    // Trigger localStorage autosave for new entries
+    // Trigger localStorage autosave for new entries only
     useEffect(() => {
-        if (!isFormReady || isEditMode || status !== 'DRAFT') return;
+        if (!isFormInitialized || isEditMode || status !== 'DRAFT') return;
         debouncedAutosave({ referenceNumber, description, date, status, entries, step });
-    }, [referenceNumber, description, date, status, entries, step, isFormReady, isEditMode, debouncedAutosave]);
+    }, [referenceNumber, description, date, status, entries, step, isFormInitialized, isEditMode, debouncedAutosave]);
 
-    // Trigger database autosave for editing drafts
+    // Cleanup debounce on unmount
     useEffect(() => {
-        if (!isFormReady || !isEditMode || !id || status !== 'DRAFT') return;
-        debouncedDbAutosave(id, { referenceNumber, description, date, status, entries });
-    }, [referenceNumber, description, date, status, entries, isFormReady, isEditMode, id, debouncedDbAutosave]);
-
-    // Cleanup debounces on unmount
-    useEffect(() => {
-        return () => { debouncedAutosave.cancel(); debouncedDbAutosave.cancel(); };
-    }, [debouncedAutosave, debouncedDbAutosave]);
+        return () => { debouncedAutosave.cancel(); };
+    }, [debouncedAutosave]);
 
     const clearAutosave = () => {
         localStorage.removeItem(AUTOSAVE_KEY);
@@ -196,6 +161,10 @@ export default function TransactionFormPage() {
         setStep(2);
     };
 
+    const isExistingEntryId = (entryId: string): boolean => {
+        return entryId.includes('-');
+    };
+
     const handleSubmit = async () => {
         if (entries.some(e => !e.accountId)) {
             toast.error("Please select an account for all entries.");
@@ -210,27 +179,40 @@ export default function TransactionFormPage() {
             return;
         }
 
-        const payload: CreateTransactionDto = {
-            referenceNumber: referenceNumber || undefined,
-            description,
-            date: new Date(date).toISOString(),
-            status,
-            entries: entries.map(e => ({
-                accountId: e.accountId,
-                amount: parseFloat(e.amount),
-                entryType: e.entryType,
-                description: e.description || undefined
-            }))
-        };
-
         if (isEditMode) {
             updateTransaction.mutate(
-                { id: id as string, data: payload },
-                { onSuccess: () => { clearAutosave(); navigate('/transactions'); } }
+                {
+                    id: id as string,
+                    data: {
+                        referenceNumber: referenceNumber || undefined,
+                        description,
+                        date: new Date(date).toISOString(),
+                        status,
+                        entries: entries.map(e => ({
+                            id: isExistingEntryId(e.id) ? e.id : undefined,
+                            accountId: e.accountId,
+                            amount: parseFloat(e.amount),
+                            entryType: e.entryType,
+                            description: e.description || undefined
+                        }))
+                    }
+                },
+                { onSuccess: () => navigate('/transactions') }
             );
         } else {
             createTransaction.mutate(
-                payload,
+                {
+                    referenceNumber: referenceNumber || undefined,
+                    description,
+                    date: new Date(date).toISOString(),
+                    status,
+                    entries: entries.map(e => ({
+                        accountId: e.accountId,
+                        amount: parseFloat(e.amount),
+                        entryType: e.entryType,
+                        description: e.description || undefined
+                    }))
+                },
                 { onSuccess: () => { clearAutosave(); navigate('/transactions'); } }
             );
         }
@@ -260,9 +242,18 @@ export default function TransactionFormPage() {
                     <h2 className="text-3xl font-bold tracking-tight pb-1">
                         {isEditMode ? 'Edit Journal Entry' : 'New Journal Entry'}
                     </h2>
-                    <p className="text-zinc-400">
-                        {step === 1 ? 'Step 1: Transaction Details' : 'Step 2: Line Items'}
-                    </p>
+                    <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                        <span>{step === 1 ? 'Step 1: Transaction Details' : 'Step 2: Line Items'}</span>
+                        {step === 2 && date && (
+                            <>
+                                <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                <span className="flex items-center gap-1 text-indigo-400 font-medium bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                                    <CalendarDays className="h-3 w-3" />
+                                    {new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(date))}
+                                </span>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
             
@@ -446,7 +437,7 @@ export default function TransactionFormPage() {
                                 <><ArrowLeft className="mr-2 h-4 w-4" /> Back to Details</>
                             ) : 'Cancel'}
                         </Button>
-                        {lastAutosaved && status === 'DRAFT' && (
+                        {lastAutosaved && !isEditMode && status === 'DRAFT' && (
                             <span className="text-xs text-zinc-500 hidden sm:inline">
                                 Autosaved at {lastAutosaved}
                             </span>

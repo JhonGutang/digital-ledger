@@ -26,6 +26,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             UnauthorizedException  => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             ForbiddenException     => (StatusCodes.Status403Forbidden, "Forbidden"),
             ConflictException      => (StatusCodes.Status409Conflict, "Conflict"),
+            Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "Database Concurrency Conflict"),
             _                      => (StatusCodes.Status500InternalServerError, "Internal server error")
         };
 
