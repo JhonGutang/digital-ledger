@@ -5,6 +5,7 @@ import {
   BarChart3,
   Settings,
   BookOpen,
+  FileSpreadsheet,
   Menu
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -17,6 +18,7 @@ export function Sidebar() {
     { label: 'Overview', icon: LayoutDashboard, path: '/' },
     { label: 'Chart of Accounts', icon: WalletCards, path: '/accounts' },
     { label: 'Journal Entries', icon: BookOpen, path: '/transactions' },
+    { label: 'Balance Checker', icon: FileSpreadsheet, path: '/tools/balance-checker' },
     { label: 'Reporting', icon: BarChart3, path: '/reports' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ];

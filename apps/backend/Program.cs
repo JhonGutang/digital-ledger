@@ -74,6 +74,7 @@ builder.Services.AddScoped<IAccountRepository, DigitalLedger.Api.Repositories.Ac
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IBalanceCheckerService, BalanceCheckerService>();
 
 builder.Services.AddCors(options =>
 {

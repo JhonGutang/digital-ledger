@@ -11,6 +11,7 @@ import Layout from './components/layout/Layout';
 import AccountsPage from './pages/accounts/AccountsPage';
 import TransactionsPage from './pages/transactions/TransactionsPage';
 import TransactionFormPage from './pages/transactions/TransactionFormPage';
+import BalanceCheckerPage from './pages/balanceChecker/BalanceCheckerPage';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/transactions" element={<TransactionsPage />} />
                 <Route path="/transactions/new" element={<TransactionFormPage />} />
                 <Route path="/transactions/:id/edit" element={<TransactionFormPage />} />
+                <Route path="/tools/balance-checker" element={<BalanceCheckerPage />} />
               </Route>
             </Route>
             
