@@ -8,7 +8,9 @@ This system is built upon strict accounting principles to ensure flawless financ
 - **Double-Entry Validation:** Every transaction must have matching total Debits and Credits before it can be posted, preventing unbalanced or erroneous entries at the source.
 - **Ledger Immutability:** Once a transaction is posted, it becomes a permanent record. Modifications or deletions are strictly prohibited; corrections require a new, explicitly linked reversing transaction to ensure a pristine and trustworthy audit trail.
 - **Workflow & Approvals:** Built-in statuses (Draft, Pending Approval, Posted, Voided) enforce a maker-checker workflow, limiting unapproved alterations before entries become permanent.
-- **Automated CSV Ingestion:** A standalone import feature processes bulk external CSV data (e.g., bank statements or legacy records), intelligently generating the corresponding journal entries to balance the accounts without requiring tedious manual intervention or oversight from accountants, auditors, or admins.
+- **CSV Tools (Phased):**
+  - *Phase 1 — Balance Checker:* A standalone utility that accepts a CSV file containing a T-table of debits and credits and instantly validates whether the entries balance. This eliminates the tedious, error-prone manual calculation that accountants currently perform. No database interaction required.
+  - *Phase 2 — Automated Ingestion:* Building on the Balance Checker, this phase processes bulk external CSV data (e.g., bank statements or legacy records), intelligently generating the corresponding journal entries and mapping them to the Chart of Accounts—without requiring manual intervention.
 
 ## Value by Role
 The system provides tailored value to different stakeholders:

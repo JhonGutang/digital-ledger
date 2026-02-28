@@ -31,11 +31,19 @@ This document outlines the core features required to build a functional MVP for 
 - [x] **Immutability Lock** (Prevent editing/deleting of `POSTED` transactions) (Status: 🟢 Implemented)
 - [ ] **Reversing Entries System** (Create inverse transactions for corrections) (Status: 🔴 Not Implemented)
 
-### 5. Automated CSV Ingestion (Standalone Feature)
-*Automated bulk data ingestion bypassing manual workflows.*
-- [ ] **File Upload Utility** (Status: 🔴 Not Implemented)
-- [ ] **Automated Parsing & Mapping Logic** (Status: 🔴 Not Implemented)
-- [ ] **Auto-Balancing & Instant Posting validation** (Status: 🔴 Not Implemented)
+### 5. CSV Tools (Phased)
+
+#### Phase 1: Balance Checker (MVP)
+*A standalone utility to instantly validate whether a CSV T-table of debits and credits is balanced. No database required.*
+- [ ] **CSV File Upload UI** (Status: 🔴 Not Implemented)
+- [ ] **CSV Parsing & Validation** (Status: 🔴 Not Implemented)
+- [ ] **Balance Result Display** (totals, difference, balanced/unbalanced) (Status: 🔴 Not Implemented)
+
+#### Phase 2: Automated CSV Ingestion (Future)
+*Full bulk ingestion that maps CSV data to the Chart of Accounts and generates journal entries.*
+- [ ] **Account Mapping Logic** (Status: 🔴 Not Implemented)
+- [ ] **Journal Entry Generation** (Status: 🔴 Not Implemented)
+- [ ] **Auto-Balancing & Posting** (Status: 🔴 Not Implemented)
 
 ### 6. Essential Reporting
 *Visibility into the financial state and audit trail.*
